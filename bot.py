@@ -5,6 +5,7 @@ from db import create_table
 gpt = GPT()
 bot = telebot.TeleBot(TOKEN)
 
+
 @bot.message_handler(commands=['start'])
 def introduce(message):
     bot.send_message(message.chat.id, f"{about_bot}")
