@@ -1,0 +1,1 @@
+DATABASE_FILENAME = 'speech_kit.db'
