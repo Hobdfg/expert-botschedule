@@ -36,6 +36,18 @@ def create_table():
     execute_query(sql_query)
 
 
+def create_table_schedule():
+    sql_query = '''
+        CREATE TABLE IF NOT EXISTS schedule (
+        id INTEGER PRIMARY KEY,
+        user_id INTEGER,
+        days INTEGER,
+        time INTEGER,
+        schedule INTEGER)
+    '''
+    execute_query(sql_query)
+
+
 def insert_row(user_id, message, cell, value):
     # Вставляем в таблицу сообщение и заполняем ячейку cell значением value
     sql_query = f'''INSERT INTO messages (user_id, message, {cell}) VALUES (?, ?, ?)'''
