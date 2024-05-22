@@ -120,4 +120,3 @@ def store_gpt_message(user_id, message, tokens):
 
 def store_stt_message(user_id, message, stt_blocks):
     insert_row(user_id, message=message, cell='stt_blocks', value=stt_blocks)
-
