@@ -3,6 +3,8 @@ import logging
 import config
 import json
 
+import utils
+from datetime import datetime
 
 database = config.DATABASE_FILENAME
 
@@ -11,6 +13,7 @@ database = config.DATABASE_FILENAME
 def execute_query(sql_query, data=None):
     rows = []
     try:
+        utils.prepare_folder(database)
         connection = sqlite3.connect(database)
         cursor = connection.cursor()
         if data:
@@ -30,6 +33,7 @@ def create_messages_table():
         CREATE TABLE IF NOT EXISTS messages (
         id INTEGER PRIMARY KEY,
         user_id INTEGER,
+        message TEXT,
         stt_blocks INTEGER,
         tokens INTEGER)
     '''
@@ -73,6 +77,13 @@ def update_schedule_row(user_id, day, time, cell, value):
         WHERE user_id=? AND day=? AND time=?
     '''
     execute_query(sql_query, data=(value, user_id, day, time))
+
+
+def delete_schedule_row(user_id, day, time):
+    day = day.lower()
+    # Удаляем из таблицы расписания
+    sql_query = f'''DELETE FROM schedules WHERE user_id=? AND day=? AND time=?'''
+    execute_query(sql_query, data=(user_id, day, time))
 
 
 def get_rows_value(rows, row=0, field=0, default=None):
@@ -150,6 +161,7 @@ def store_stt_message(user_id, message, stt_blocks):
 
 
 def load_schedule(user_id, day):
+    day = day.lower()
     sql_query = '''
         SELECT time, lesson FROM schedules
         WHERE user_id=? AND day=?
@@ -160,16 +172,54 @@ def load_schedule(user_id, day):
 
 
 def store_schedule(user_id, day, time, lesson):
-    insert_schedule_row(user_id, day, time, lesson)
+    day = day.lower()
+    time = datetime.strptime(time, '%H:%M').strftime('%H:%M')
+
+    sql_query = '''
+        SELECT lesson FROM schedules
+        WHERE user_id=? AND day=? AND time=?
+    '''
+    rows = execute_query(sql_query, (user_id, day, time,))
+
+    if len(rows) == 0:
+        insert_schedule_row(user_id, day, time, lesson)
+    else:
+        update_schedule_row(user_id, day, time, cell='lesson', value=lesson)
 
 
-def change_schedule_day(user_id, day, time, new_day):
-    update_schedule_row(user_id, day, time, cell='day', value=new_day)
+def delete_schedule(user_id, day, time):
+    day = day.lower()
+    time = datetime.strptime(time, '%H:%M').strftime('%H:%M')
+
+    delete_schedule_row(user_id, day, time)
 
 
-def change_schedule_time(user_id, day, time, new_time):
-    update_schedule_row(user_id, day, time, cell='time', value=new_time)
+def load_schedule_days(user_id):
+    sql_query = '''
+        SELECT DISTINCT day FROM schedules
+        WHERE user_id=?
+    '''
+    rows = execute_query(sql_query, (user_id,))
+    days = []
+    for row in rows:
+        days.append(row[0])
+    days = list(filter(lambda it: it in days, utils.day_of_week()))
+    return days
 
 
-def change_schedule_lesson(user_id, day, time, new_lesson):
-    update_schedule_row(user_id, day, time, cell='lesson', value=new_lesson)
+def load_schedule_now():
+    now = datetime.now()
+    day_num = utils.to_int(now.strftime('%w')) - 1
+    if day_num < 0:
+        day_num = 6
+    day = utils.day_of_week()[day_num]
+    time = now.strftime('%H:%M')
+
+    # time = '11:00'
+
+    sql_query = '''
+        SELECT user_id, time, lesson FROM schedules
+        WHERE day=? AND time=?
+    '''
+    rows = execute_query(sql_query, (day, time))
+    return rows

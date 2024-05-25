@@ -24,12 +24,8 @@ def get_telegram_token():
     return get_env_value('TELEGRAM_TOKEN')
 
 
-def to_int(value):
-    try:
-        result = int(value)
-    except ValueError:
-        result = 0
-    return result
+def is_superuser(user_id):
+    return user_id in config.SUPERUSERS
 
 
 def to_int(value):
@@ -40,7 +36,18 @@ def to_int(value):
     return result
 
 
+def day_of_week():
+    return ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье']
+
+
+def prepare_folder(filename):
+    path, file = os.path.split(filename)
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
+prepare_folder(config.LOG_FILENAME)
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO, filename= config.LOG_FILENAME, filemode= 'w',
+logging.basicConfig(level=logging.INFO, filename=config.LOG_FILENAME, filemode= 'w',
                     format='%(asctime)s %(levelname)s %(message)s')
