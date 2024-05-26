@@ -1,6 +1,3 @@
-about_bot_text = "Привет! Я Бот-Расписание, я помогу тебе организовать твою неделю!"
-
-
 def get_commands(handlers):
     commands = [
         {
