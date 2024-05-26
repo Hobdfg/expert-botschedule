@@ -1,7 +1,6 @@
 import logging
 import config
 
-import time
 import requests
 from requests.exceptions import ConnectionError
 
